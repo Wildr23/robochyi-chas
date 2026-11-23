@@ -1,11 +1,20 @@
-# Keep all domain models and Gson serialized classes intact
+# Keep all domain models, cloud DTOs, and Gson serialized classes intact
+-keep @androidx.annotation.Keep class * { *; }
 -keep class ua.robochyichas.app.domain.model.** { *; }
+-keep class ua.robochyichas.app.data.cloud.DriveFileMetadata { *; }
+-keep class ua.robochyichas.app.data.cloud.DriveFileListResponse { *; }
+-keep class ua.robochyichas.app.domain.engine.ImportExportEngine$LegacyBackupV2 { *; }
+-keep class ua.robochyichas.app.domain.engine.ImportExportEngine$LegacyShiftV2 { *; }
 -keepattributes Signature,InnerClasses,EnclosingMethod
 -keepattributes *Annotation*
 
-# Gson rules
--keepclassmembers,allowobfuscation class * {
+# Comprehensive Gson rules for R8 full mode
+-keepclasseswithmembers class * {
   @com.google.gson.annotations.SerializedName <fields>;
+}
+-keepclassmembers class * {
+  @com.google.gson.annotations.SerializedName <fields>;
+  <init>(...);
 }
 -keep class com.google.gson.reflect.TypeToken { *; }
 -keep class * extends com.google.gson.reflect.TypeToken

@@ -1,5 +1,6 @@
 package ua.robochyichas.app.data.cloud
 
+import androidx.annotation.Keep
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.Dispatchers
@@ -18,13 +19,15 @@ class DriveNotFoundException(message: String) : Exception(message)
 class DriveNetworkException(message: String, cause: Throwable? = null) : Exception(message, cause)
 class DriveApiException(val code: Int, message: String) : Exception(message)
 
+@Keep
 data class DriveFileMetadata(
-    @SerializedName("id") val id: String,
-    @SerializedName("name") val name: String,
+    @SerializedName("id") val id: String = "",
+    @SerializedName("name") val name: String = "",
     @SerializedName("modifiedTime") val modifiedTime: String? = null,
     @SerializedName("mimeType") val mimeType: String? = null
 )
 
+@Keep
 private data class DriveFileListResponse(
     @SerializedName("files") val files: List<DriveFileMetadata>? = null
 )

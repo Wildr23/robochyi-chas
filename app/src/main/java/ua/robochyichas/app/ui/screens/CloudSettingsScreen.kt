@@ -341,25 +341,40 @@ fun CloudSettingsScreen(
                     ) {
                         Button(
                             onClick = onSyncNow,
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1.18f),
                             shape = RoundedCornerShape(12.dp),
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = colors.emerald,
                                 contentColor = Color(0xFF022C22)
                             )
                         ) {
                             Icon(Icons.Rounded.Sync, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Синхронізувати", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Text(
+                                text = "Синхронізувати",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                                maxLines = 1,
+                                softWrap = false
+                            )
                         }
                         OutlinedButton(
                             onClick = { showRestoreDriveConfirm = true },
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp)
+                            modifier = Modifier.weight(0.82f),
+                            shape = RoundedCornerShape(12.dp),
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp)
                         ) {
                             Icon(Icons.Rounded.CloudDownload, contentDescription = null, modifier = Modifier.size(16.dp), tint = colors.sky)
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Відновити", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = colors.sky)
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Text(
+                                text = "Відновити",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                                color = colors.sky,
+                                maxLines = 1,
+                                softWrap = false
+                            )
                         }
                     }
 

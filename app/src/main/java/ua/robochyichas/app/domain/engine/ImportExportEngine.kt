@@ -1,5 +1,6 @@
 package ua.robochyichas.app.domain.engine
 
+import androidx.annotation.Keep
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonParser
@@ -26,6 +27,7 @@ object ImportExportEngine {
         .create()
 
     // Legacy v2 format models from Робочий час_2_1.apk
+    @Keep
     private data class LegacyBackupV2(
         @SerializedName("firstWorkMonth") val firstWorkMonth: String? = null,
         @SerializedName("carryOverCapMin") val carryOverCapMin: Int? = null,
@@ -34,6 +36,7 @@ object ImportExportEngine {
         @SerializedName("shifts") val shifts: List<LegacyShiftV2>? = null
     )
 
+    @Keep
     private data class LegacyShiftV2(
         @SerializedName("id") val id: Long? = null,
         @SerializedName("date") val date: String? = null,
@@ -80,7 +83,7 @@ object ImportExportEngine {
         val checksum = sha256Hex(canonicalPayloadForHash(settings, shifts))
         return BackupEnvelope(
             schemaVersion = 3,
-            appVersion = "3.2.0",
+            appVersion = "3.2.1",
             deviceId = deviceId,
             exportedAtEpochMs = exportedAtEpochMs,
             revision = revision,

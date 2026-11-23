@@ -134,7 +134,7 @@ data class SyncState(
 
 data class BackupEnvelope(
     @SerializedName("schemaVersion") val schemaVersion: Int = 3,
-    @SerializedName("appVersion") val appVersion: String = "3.2.0",
+    @SerializedName("appVersion") val appVersion: String = "3.2.1",
     @SerializedName("deviceId") val deviceId: String = "",
     @SerializedName("exportedAtEpochMs") val exportedAtEpochMs: Long = 0L,
     @SerializedName("revision") val revision: Long = 0L,

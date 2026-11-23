@@ -5,11 +5,13 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.OpenableColumns
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -41,6 +43,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import ua.robochyichas.app.data.cloud.GoogleAuthManager
+import ua.robochyichas.app.domain.model.ThemeMode
 import ua.robochyichas.app.ui.MainTab
 import ua.robochyichas.app.ui.UiEffect
 import ua.robochyichas.app.ui.WorkTimeViewModel
@@ -133,6 +136,32 @@ class MainActivity : ComponentActivity() {
         setContent {
             val state by viewModel.uiState.collectAsState()
             val snackbarHostState = remember { SnackbarHostState() }
+            val systemDark = isSystemInDarkTheme()
+            val isDark = when (state.settings.themeMode) {
+                ThemeMode.DARK -> true
+                ThemeMode.LIGHT -> false
+                ThemeMode.SYSTEM -> systemDark
+            }
+
+            LaunchedEffect(isDark) {
+                if (isDark) {
+                    enableEdgeToEdge(
+                        statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
+                        navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
+                    )
+                } else {
+                    enableEdgeToEdge(
+                        statusBarStyle = SystemBarStyle.light(
+                            android.graphics.Color.TRANSPARENT,
+                            android.graphics.Color.TRANSPARENT
+                        ),
+                        navigationBarStyle = SystemBarStyle.light(
+                            android.graphics.Color.TRANSPARENT,
+                            android.graphics.Color.TRANSPARENT
+                        )
+                    )
+                }
+            }
 
             LaunchedEffect(Unit) {
                 viewModel.effects.collect { effect ->
