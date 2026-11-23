@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Login
 import androidx.compose.material.icons.automirrored.rounded.Logout
@@ -62,6 +63,7 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ua.robochyichas.app.domain.engine.TimeCalcEngine
@@ -120,6 +122,9 @@ fun CloudSettingsScreen(
     var defaultNormInput by remember(settings.defaultNormMinutes) {
         mutableStateOf(TimeCalcEngine.formatHoursMinutesPadded(settings.defaultNormMinutes))
     }
+    var pause1Input by remember(settings.defaultPause1Min) { mutableStateOf(settings.defaultPause1Min.toString()) }
+    var pause2Input by remember(settings.defaultPause2Min) { mutableStateOf(settings.defaultPause2Min.toString()) }
+    var pause3Input by remember(settings.defaultPause3Min) { mutableStateOf(settings.defaultPause3Min.toString()) }
 
     val formattedLastSync = remember(sync.lastSyncTimestampMs) {
         sync.lastSyncTimestampMs?.let { ts ->
@@ -627,17 +632,53 @@ fun CloudSettingsScreen(
                     )
                 }
 
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = pause1Input,
+                        onValueChange = { pause1Input = it.filter { ch -> ch.isDigit() }.take(3) },
+                        label = { Text("Пауза 1 (хв)", fontSize = 11.sp) },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f)
+                    )
+                    OutlinedTextField(
+                        value = pause2Input,
+                        onValueChange = { pause2Input = it.filter { ch -> ch.isDigit() }.take(3) },
+                        label = { Text("Пауза 2 (хв)", fontSize = 11.sp) },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f)
+                    )
+                    OutlinedTextField(
+                        value = pause3Input,
+                        onValueChange = { pause3Input = it.filter { ch -> ch.isDigit() }.take(3) },
+                        label = { Text("Пауза 3+ (хв)", fontSize = 11.sp) },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
                 Button(
                     onClick = {
                         val cap = TimeCalcEngine.timeToMinutes(carryCapInput)?.coerceAtLeast(0) ?: settings.carryOverCapMinutes
                         val init = TimeCalcEngine.timeToMinutes(initBalInput) ?: settings.initialBalanceMinutes
                         val norm = TimeCalcEngine.timeToMinutes(defaultNormInput)?.coerceAtLeast(0) ?: settings.defaultNormMinutes
+                        val p1 = pause1Input.toIntOrNull()?.coerceIn(1, 180) ?: settings.defaultPause1Min
+                        val p2 = pause2Input.toIntOrNull()?.coerceIn(1, 180) ?: settings.defaultPause2Min
+                        val p3 = pause3Input.toIntOrNull()?.coerceIn(1, 180) ?: settings.defaultPause3Min
                         onUpdateSettings(
                             settings.copy(
                                 firstWorkMonth = firstMonthInput.trim(),
                                 carryOverCapMinutes = cap,
                                 initialBalanceMinutes = init,
-                                defaultNormMinutes = norm
+                                defaultNormMinutes = norm,
+                                defaultPause1Min = p1,
+                                defaultPause2Min = p2,
+                                defaultPause3Min = p3
                             )
                         )
                     },

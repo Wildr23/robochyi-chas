@@ -8,7 +8,11 @@ import ua.robochyichas.app.domain.model.PauseInterval
 import ua.robochyichas.app.domain.model.ShiftRecord
 import ua.robochyichas.app.domain.model.TimelineResult
 import java.time.DayOfWeek
+import java.time.Duration
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import kotlin.math.abs
 
 object TimeCalcEngine {
@@ -103,6 +107,86 @@ object TimeCalcEngine {
         val h = wrapped / 60
         val m = wrapped % 60
         return "${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}"
+    }
+
+    fun defaultPauseDurationForIndex(pauseIndex: Int, settings: AppSettings): Int {
+        val raw = when (pauseIndex) {
+            0 -> settings.defaultPause1Min
+            1 -> settings.defaultPause2Min
+            else -> settings.defaultPause3Min
+        }
+        return raw.coerceIn(1, 180)
+    }
+
+    fun createAutoPause(start: String, pauseIndex: Int, settings: AppSettings): PauseInterval {
+        val durationMin = defaultPauseDurationForIndex(pauseIndex, settings)
+        return PauseInterval(
+            start = start,
+            end = addMinutesToTimeStr(start, durationMin)
+        )
+    }
+
+    fun updatePauseStartWithAutoEnd(
+        pauseIndex: Int,
+        newStart: String,
+        settings: AppSettings
+    ): PauseInterval = createAutoPause(newStart, pauseIndex, settings)
+
+    private val hhMmFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+
+    private fun resolveActiveWindow(
+        pause: PauseInterval,
+        now: LocalDateTime
+    ): Pair<LocalDateTime, LocalDateTime>? {
+        if (!pause.isComplete) return null
+        val startTime = runCatching { LocalTime.parse(pause.start.trim(), hhMmFormatter) }.getOrNull() ?: return null
+        val endTime = runCatching { LocalTime.parse(pause.end.trim(), hhMmFormatter) }.getOrNull() ?: return null
+        if (startTime == endTime) return null
+
+        val isOvernight = endTime.isBefore(startTime)
+        val today = now.toLocalDate()
+        val startToday = LocalDateTime.of(today, startTime)
+        val endToday = if (isOvernight) {
+            LocalDateTime.of(today.plusDays(1), endTime)
+        } else {
+            LocalDateTime.of(today, endTime)
+        }
+        if (!now.isBefore(startToday) && now.isBefore(endToday)) {
+            return startToday to endToday
+        }
+
+        if (isOvernight) {
+            val startPrev = LocalDateTime.of(today.minusDays(1), startTime)
+            val endPrev = LocalDateTime.of(today, endTime)
+            if (!now.isBefore(startPrev) && now.isBefore(endPrev)) {
+                return startPrev to endPrev
+            }
+        }
+        return null
+    }
+
+    fun remainingScheduledPauseSeconds(pause: PauseInterval, now: LocalDateTime): Long? {
+        val (_, endDt) = resolveActiveWindow(pause, now) ?: return null
+        return Duration.between(now, endDt).seconds.coerceAtLeast(1L)
+    }
+
+    fun elapsedScheduledPauseSeconds(pause: PauseInterval, now: LocalDateTime): Long? {
+        val (startDt, _) = resolveActiveWindow(pause, now) ?: return null
+        return Duration.between(startDt, now).seconds.coerceAtLeast(0L)
+    }
+
+    fun trimActivePausesForShiftEnd(
+        pauses: List<PauseInterval>,
+        nowTimeStr: String,
+        now: LocalDateTime
+    ): List<PauseInterval> {
+        return pauses.map { p ->
+            when {
+                p.isOpen -> p.copy(end = nowTimeStr)
+                remainingScheduledPauseSeconds(p, now) != null -> p.copy(end = nowTimeStr)
+                else -> p
+            }
+        }
     }
 
     fun formatDateUa(isoDate: String): String {

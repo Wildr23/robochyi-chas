@@ -293,11 +293,7 @@ fun ShiftEditorSheet(
                     }
 
                     pauses.forEachIndexed { idx, pause ->
-                        val defaultPreset = when (idx) {
-                            0 -> settings.defaultPause1Min
-                            1 -> settings.defaultPause2Min
-                            else -> settings.defaultPause3Min
-                        }
+                        val defaultPreset = TimeCalcEngine.defaultPauseDurationForIndex(idx, settings)
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -307,10 +303,7 @@ fun ShiftEditorSheet(
                                 onClick = {
                                     val nowStr = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))
                                     pickTime(pause.start, nowStr) { picked ->
-                                        val autoEnd = pause.end.ifBlank {
-                                            TimeCalcEngine.addMinutesToTimeStr(picked, defaultPreset)
-                                        }
-                                        pauses[idx] = pause.copy(start = picked, end = autoEnd)
+                                        pauses[idx] = TimeCalcEngine.updatePauseStartWithAutoEnd(idx, picked, settings)
                                     }
                                 },
                                 modifier = Modifier.weight(1f),
@@ -376,19 +369,8 @@ fun ShiftEditorSheet(
                     ) {
                         OutlinedButton(
                             onClick = {
-                                val nextIdx = pauses.size
-                                val preset = when (nextIdx) {
-                                    0 -> settings.defaultPause1Min
-                                    1 -> settings.defaultPause2Min
-                                    else -> settings.defaultPause3Min
-                                }
                                 val nowStr = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))
-                                pauses.add(
-                                    PauseInterval(
-                                        start = nowStr,
-                                        end = TimeCalcEngine.addMinutesToTimeStr(nowStr, preset)
-                                    )
-                                )
+                                pauses.add(TimeCalcEngine.createAutoPause(nowStr, pauses.size, settings))
                             },
                             shape = RoundedCornerShape(10.dp),
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)

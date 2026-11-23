@@ -10,6 +10,7 @@ import ua.robochyichas.app.domain.model.AppSettings
 import ua.robochyichas.app.domain.model.EntryType
 import ua.robochyichas.app.domain.model.PauseInterval
 import ua.robochyichas.app.domain.model.ShiftRecord
+import java.time.LocalDateTime
 
 class TimeCalcEngineTest {
 
@@ -226,5 +227,57 @@ class TimeCalcEngineTest {
         val res = TimeCalcEngine.computeTimeline(listOf(active, deleted), defaultSettings)
         assertEquals(1, res.shifts.size)
         assertEquals(60, res.currentBankMinutes)
+    }
+
+    @Test
+    fun `auto pause durations follow p1=15 p2=15 p3plus=5 and custom settings`() {
+        assertEquals(15, TimeCalcEngine.defaultPauseDurationForIndex(0, defaultSettings))
+        assertEquals(15, TimeCalcEngine.defaultPauseDurationForIndex(1, defaultSettings))
+        assertEquals(5, TimeCalcEngine.defaultPauseDurationForIndex(2, defaultSettings))
+        assertEquals(5, TimeCalcEngine.defaultPauseDurationForIndex(3, defaultSettings))
+
+        val custom = defaultSettings.copy(defaultPause1Min = 20, defaultPause2Min = 10, defaultPause3Min = 7)
+        assertEquals(PauseInterval("10:00", "10:20"), TimeCalcEngine.createAutoPause("10:00", 0, custom))
+        assertEquals(PauseInterval("13:00", "13:10"), TimeCalcEngine.createAutoPause("13:00", 1, custom))
+        assertEquals(PauseInterval("16:00", "16:07"), TimeCalcEngine.createAutoPause("16:00", 2, custom))
+    }
+
+    @Test
+    fun `updating pause start always recalculates end including midnight wrap`() {
+        val p1Updated = TimeCalcEngine.updatePauseStartWithAutoEnd(0, "10:30", defaultSettings)
+        assertEquals(PauseInterval("10:30", "10:45"), p1Updated)
+
+        val p3Midnight = TimeCalcEngine.updatePauseStartWithAutoEnd(2, "23:58", defaultSettings)
+        assertEquals(PauseInterval("23:58", "00:03"), p3Midnight)
+    }
+
+    @Test
+    fun `remainingScheduledPauseSeconds detects active and overnight pauses accurately`() {
+        val dayPause = PauseInterval("14:30", "14:45")
+        val insideDay = LocalDateTime.of(2026, 11, 23, 14, 35, 30)
+        assertEquals(570L, TimeCalcEngine.remainingScheduledPauseSeconds(dayPause, insideDay))
+        assertEquals(330L, TimeCalcEngine.elapsedScheduledPauseSeconds(dayPause, insideDay))
+
+        val afterDay = LocalDateTime.of(2026, 11, 23, 14, 45, 0)
+        assertNull(TimeCalcEngine.remainingScheduledPauseSeconds(dayPause, afterDay))
+
+        val nightPause = PauseInterval("23:55", "00:10")
+        val afterMidnight = LocalDateTime.of(2026, 11, 24, 0, 2, 0)
+        assertEquals(480L, TimeCalcEngine.remainingScheduledPauseSeconds(nightPause, afterMidnight))
+    }
+
+    @Test
+    fun `trimActivePausesForShiftEnd trims only active or open pauses`() {
+        val pauses = listOf(
+            PauseInterval("10:00", "10:15"), // already finished
+            PauseInterval("14:30", "14:45"), // currently in progress at 14:38
+            PauseInterval("15:00", "")       // open pause
+        )
+        val now = LocalDateTime.of(2026, 11, 23, 14, 38, 0)
+        val trimmed = TimeCalcEngine.trimActivePausesForShiftEnd(pauses, "14:38", now)
+
+        assertEquals(PauseInterval("10:00", "10:15"), trimmed[0])
+        assertEquals(PauseInterval("14:30", "14:38"), trimmed[1])
+        assertEquals(PauseInterval("15:00", "14:38"), trimmed[2])
     }
 }

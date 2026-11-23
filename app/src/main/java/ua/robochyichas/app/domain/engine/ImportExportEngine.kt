@@ -83,7 +83,7 @@ object ImportExportEngine {
         val checksum = sha256Hex(canonicalPayloadForHash(settings, shifts))
         return BackupEnvelope(
             schemaVersion = 3,
-            appVersion = "3.2.1",
+            appVersion = "3.3.0",
             deviceId = deviceId,
             exportedAtEpochMs = exportedAtEpochMs,
             revision = revision,

@@ -253,8 +253,9 @@ class MainActivity : ComponentActivity() {
                                     }
                                 },
                                 onStartOrResumeShift = { viewModel.punchStartOrResumeShift() },
-                                onStartPause = { preset -> viewModel.punchStartPause(preset) },
-                                onEndPause = { viewModel.punchEndPause() },
+                                onStartAutoPause = { viewModel.punchAutoPause() },
+                                onFinishPauseNow = { viewModel.updateLastPauseEnd(null) },
+                                onEditLastPauseEnd = { picked -> viewModel.updateLastPauseEnd(picked) },
                                 onEndShift = { viewModel.punchEndShift() },
                                 onToggleMonth = { ym -> viewModel.toggleMonthSelection(ym) },
                                 onToggleSelectAllMonths = { viewModel.toggleSelectAllMonths() },

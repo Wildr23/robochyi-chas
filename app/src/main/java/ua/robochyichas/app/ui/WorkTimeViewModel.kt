@@ -78,6 +78,9 @@ data class WorkTimeUiState(
     val todayShift: ComputedShift? = null,
     val liveShiftElapsedSeconds: Long = 0L,
     val livePauseElapsedSeconds: Long = 0L,
+    val livePauseRemainingSeconds: Long = 0L,
+    val activePauseNumber: Int? = null,
+    val activePauseReturnTime: String? = null,
     val isEditorOpen: Boolean = false,
     val editingShift: ShiftRecord? = null,
     val folderPicker: FolderPickerState = FolderPickerState(),
@@ -169,7 +172,7 @@ class WorkTimeViewModel(
         val todayComputed = timeline.shifts.lastOrNull {
             it.shift.date == todayIso && it.shift.entryType == EntryType.SHIFT
         }
-        val (phase, shiftSec, pauseSec) = computeLivePhase(todayComputed, filter.now)
+        val livePhase = computeLivePhase(todayComputed, filter.now)
 
         WorkTimeUiState(
             activeTab = filter.tab,
@@ -179,10 +182,13 @@ class WorkTimeViewModel(
             selectedMonths = effectiveSelected,
             selectedEntryTypeFilter = filter.entryFilter,
             searchQuery = filter.query,
-            todayPhase = phase,
+            todayPhase = livePhase.phase,
             todayShift = todayComputed,
-            liveShiftElapsedSeconds = shiftSec,
-            livePauseElapsedSeconds = pauseSec,
+            liveShiftElapsedSeconds = livePhase.shiftElapsedSec,
+            livePauseElapsedSeconds = livePhase.pauseElapsedSec,
+            livePauseRemainingSeconds = livePhase.pauseRemainingSec,
+            activePauseNumber = livePhase.activePauseNumber,
+            activePauseReturnTime = livePhase.activePauseReturnTime,
             isEditorOpen = filter.editor.first,
             editingShift = filter.editor.second,
             folderPicker = filter.folderPicker,
@@ -204,37 +210,96 @@ class WorkTimeViewModel(
         }
     }
 
+    private data class LivePhaseResult(
+        val phase: TodayShiftPhase,
+        val shiftElapsedSec: Long = 0L,
+        val pauseElapsedSec: Long = 0L,
+        val pauseRemainingSec: Long = 0L,
+        val activePauseNumber: Int? = null,
+        val activePauseReturnTime: String? = null
+    )
+
     private fun computeLivePhase(
         todayComputed: ComputedShift?,
         now: LocalDateTime
-    ): Triple<TodayShiftPhase, Long, Long> {
-        val s = todayComputed?.shift ?: return Triple(TodayShiftPhase.IDLE, 0L, 0L)
-        if (s.start.isBlank()) return Triple(TodayShiftPhase.IDLE, 0L, 0L)
+    ): LivePhaseResult {
+        val s = todayComputed?.shift ?: return LivePhaseResult(TodayShiftPhase.IDLE)
+        if (s.start.isBlank()) return LivePhaseResult(TodayShiftPhase.IDLE)
         if (s.end.isNotBlank()) {
-            return Triple(TodayShiftPhase.COMPLETED, todayComputed.workedMinutes * 60L, 0L)
+            return LivePhaseResult(
+                phase = TodayShiftPhase.COMPLETED,
+                shiftElapsedSec = todayComputed.workedMinutes * 60L
+            )
         }
 
-        val openPause = s.pauses.lastOrNull { it.isOpen }
         val today = now.toLocalDate()
-        val startTime = parseLocalTimeOrNull(s.start) ?: return Triple(TodayShiftPhase.WORKING, 0L, 0L)
+        val startTime = parseLocalTimeOrNull(s.start) ?: return LivePhaseResult(TodayShiftPhase.WORKING)
         val startDt = LocalDateTime.of(today, startTime).let { dt ->
             if (dt.isAfter(now)) dt.minusDays(1) else dt
         }
-        val completedPauseSec = todayComputed.pauseMinutes * 60L
-        var openPauseSec = 0L
-        if (openPause != null) {
+        val grossSec = Duration.between(startDt, now).seconds.coerceAtLeast(0L)
+
+        val openIdx = s.pauses.indexOfLast { it.isOpen }
+        val scheduledActiveIdx = if (openIdx == -1) {
+            s.pauses.indexOfLast { TimeCalcEngine.remainingScheduledPauseSeconds(it, now) != null }
+        } else {
+            -1
+        }
+        val activeIdx = if (openIdx >= 0) openIdx else scheduledActiveIdx
+
+        val completedPauses = if (activeIdx >= 0) {
+            s.pauses.filterIndexed { idx, _ -> idx != activeIdx }
+        } else {
+            s.pauses
+        }
+        val completedPauseMin = if (s.pauses.isEmpty() && s.manualPauseMinutes > 0) {
+            s.manualPauseMinutes
+        } else {
+            TimeCalcEngine.calcPauseMinutes(completedPauses, 0)
+        }
+        val completedPauseSec = completedPauseMin * 60L
+
+        if (openIdx >= 0) {
+            val openPause = s.pauses[openIdx]
+            var openElapsedSec = 0L
             val pStart = parseLocalTimeOrNull(openPause.start)
             if (pStart != null) {
                 val pStartDt = LocalDateTime.of(today, pStart).let { dt ->
                     if (dt.isAfter(now)) dt.minusDays(1) else dt
                 }
-                openPauseSec = Duration.between(pStartDt, now).seconds.coerceAtLeast(0L)
+                openElapsedSec = Duration.between(pStartDt, now).seconds.coerceAtLeast(0L)
             }
+            val netSec = (grossSec - completedPauseSec - openElapsedSec).coerceAtLeast(0L)
+            return LivePhaseResult(
+                phase = TodayShiftPhase.ON_PAUSE,
+                shiftElapsedSec = netSec,
+                pauseElapsedSec = openElapsedSec,
+                pauseRemainingSec = 0L,
+                activePauseNumber = openIdx + 1,
+                activePauseReturnTime = null
+            )
         }
-        val grossSec = Duration.between(startDt, now).seconds.coerceAtLeast(0L)
-        val netSec = (grossSec - completedPauseSec - openPauseSec).coerceAtLeast(0L)
-        val phase = if (openPause != null) TodayShiftPhase.ON_PAUSE else TodayShiftPhase.WORKING
-        return Triple(phase, netSec, openPauseSec)
+
+        if (scheduledActiveIdx >= 0) {
+            val activePause = s.pauses[scheduledActiveIdx]
+            val remSec = TimeCalcEngine.remainingScheduledPauseSeconds(activePause, now) ?: 0L
+            val elapsedSec = TimeCalcEngine.elapsedScheduledPauseSeconds(activePause, now) ?: 0L
+            val netSec = (grossSec - completedPauseSec - elapsedSec).coerceAtLeast(0L)
+            return LivePhaseResult(
+                phase = TodayShiftPhase.ON_PAUSE,
+                shiftElapsedSec = netSec,
+                pauseElapsedSec = elapsedSec,
+                pauseRemainingSec = remSec,
+                activePauseNumber = scheduledActiveIdx + 1,
+                activePauseReturnTime = activePause.end
+            )
+        }
+
+        val netSec = (grossSec - completedPauseSec).coerceAtLeast(0L)
+        return LivePhaseResult(
+            phase = TodayShiftPhase.WORKING,
+            shiftElapsedSec = netSec
+        )
     }
 
     private fun parseLocalTimeOrNull(str: String): LocalTime? =
@@ -359,10 +424,12 @@ class WorkTimeViewModel(
         }
     }
 
-    fun punchStartPause(presetMinutes: Int? = null) {
+    fun punchAutoPause() {
         viewModelScope.launch {
-            val nowTime = LocalTime.now().format(timeFmt)
-            val today = LocalDate.now().toString()
+            val now = LocalDateTime.now()
+            val nowTime = now.toLocalTime().format(timeFmt)
+            val today = now.toLocalDate().toString()
+            val settings = uiState.value.settings
             val existing = repository.getActiveShifts().lastOrNull {
                 it.date == today && it.entryType == EntryType.SHIFT
             } ?: run {
@@ -370,19 +437,14 @@ class WorkTimeViewModel(
                 return@launch
             }
 
-            if (existing.pauses.any { it.isOpen }) {
+            if (existing.pauses.any { it.isOpen || TimeCalcEngine.remainingScheduledPauseSeconds(it, now) != null }) {
                 emitMessage("Пауза вже триває")
                 return@launch
             }
 
-            val newPause = if (presetMinutes != null) {
-                PauseInterval(
-                    start = nowTime,
-                    end = TimeCalcEngine.addMinutesToTimeStr(nowTime, presetMinutes)
-                )
-            } else {
-                PauseInterval(start = nowTime, end = "")
-            }
+            val nextIdx = existing.pauses.size
+            val presetMin = TimeCalcEngine.defaultPauseDurationForIndex(nextIdx, settings)
+            val newPause = TimeCalcEngine.createAutoPause(nowTime, nextIdx, settings)
 
             repository.upsertShift(
                 existing.copy(
@@ -390,15 +452,11 @@ class WorkTimeViewModel(
                     pauses = existing.pauses + newPause
                 )
             )
-            if (presetMinutes != null) {
-                emitMessage("Пауза +$presetMinutes хв: $nowTime – ${newPause.end}")
-            } else {
-                emitMessage("Паузу розпочато о $nowTime")
-            }
+            emitMessage("Пауза ${nextIdx + 1} (+${presetMin} хв): $nowTime – ${newPause.end}")
         }
     }
 
-    fun punchEndPause() {
+    fun updateLastPauseEnd(customEndTime: String? = null) {
         viewModelScope.launch {
             val nowTime = LocalTime.now().format(timeFmt)
             val today = LocalDate.now().toString()
@@ -406,23 +464,25 @@ class WorkTimeViewModel(
                 it.date == today && it.entryType == EntryType.SHIFT
             } ?: return@launch
 
-            val openIdx = existing.pauses.indexOfLast { it.isOpen }
-            if (openIdx == -1) {
-                emitMessage("Немає активної паузи")
+            if (existing.pauses.isEmpty()) {
+                emitMessage("Немає пауз за сьогодні")
                 return@launch
             }
 
+            val lastIdx = existing.pauses.lastIndex
+            val targetEnd = customEndTime?.takeIf { it.isNotBlank() } ?: nowTime
             val updatedPauses = existing.pauses.toMutableList()
-            updatedPauses[openIdx] = updatedPauses[openIdx].copy(end = nowTime)
+            updatedPauses[lastIdx] = updatedPauses[lastIdx].copy(end = targetEnd)
             repository.upsertShift(existing.copy(pauses = updatedPauses))
-            emitMessage("Паузу завершено о $nowTime")
+            emitMessage("Кінець паузи ${lastIdx + 1}: $targetEnd")
         }
     }
 
     fun punchEndShift() {
         viewModelScope.launch {
-            val nowTime = LocalTime.now().format(timeFmt)
-            val today = LocalDate.now().toString()
+            val now = LocalDateTime.now()
+            val nowTime = now.toLocalTime().format(timeFmt)
+            val today = now.toLocalDate().toString()
             val existing = repository.getActiveShifts().lastOrNull {
                 it.date == today && it.entryType == EntryType.SHIFT
             } ?: run {
@@ -430,9 +490,11 @@ class WorkTimeViewModel(
                 return@launch
             }
 
-            val closedPauses = existing.pauses.map { p ->
-                if (p.isOpen) p.copy(end = nowTime) else p
-            }
+            val closedPauses = TimeCalcEngine.trimActivePausesForShiftEnd(
+                pauses = existing.pauses,
+                nowTimeStr = nowTime,
+                now = now
+            )
             repository.upsertShift(
                 existing.copy(
                     end = nowTime,
