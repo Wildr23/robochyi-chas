@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Політика конфіденційності / Privacy Policy — Робочий час</title>
+  <style>
+    :root {
+      --bg: #090d16;
+      --card: #111827;
+      --border: #28344a;
+      --text: #f8fafc;
+      --muted: #cbd5e1;
+      --emerald: #10b981;
+      --sky: #38bdf8;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+      margin: 0;
+      padding: 32px 16px 64px;
+    }
+    .wrap {
+      max-width: 820px;
+      margin: 0 auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px 26px;
+    }
+    a { color: var(--sky); }
+    h1 { margin-top: 0; font-size: 1.7rem; }
+    h2 { margin-top: 28px; font-size: 1.2rem; color: var(--emerald); }
+    ul { padding-left: 20px; }
+    li { margin-bottom: 8px; color: var(--muted); }
+    p { color: var(--muted); }
+    hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+    code {
+      background: #1b2436;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 0.9em;
+      color: #fde68a;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <p><a href="index.html">← На головну / Back to Home</a></p>
+
+    <h1>Політика конфіденційності — «Робочий час»</h1>
+    <p><strong>Останнє оновлення:</strong> 23 листопада 2026 року</p>
+
+    <h2>1. Загальні положення</h2>
+    <p>
+      Мобільний додаток <strong>«Робочий час»</strong> (<code>ua.robochyichas.app</code>) створений для персонального
+      офлайн-обліку робочих змін, перерв і наднормових годин. Розробник не має власного бекенд-сервера, не показує
+      реклами та не продає чи не передає дані третім сторонам.
+    </p>
+
+    <h2>2. Які дані зберігаються</h2>
+    <ul>
+      <li><strong>Дані обліку часу:</strong> дати змін, час початку/завершення, перерви, нотатки та налаштування норм зберігаються <strong>локально на вашому пристрої</strong> у базі SQLite (Room).</li>
+      <li><strong>Дані Google-акаунту (за бажанням):</strong> якщо ви вмикаєте синхронізацію з Google Диском, додаток відображає вашу електронну адресу та ім'я профілю виключно в інтерфейсі додатку для підтвердження активного акаунту.</li>
+    </ul>
+
+    <h2>3. Використання Google Drive API</h2>
+    <p>Якщо ви самостійно авторизуєтесь у Google Диску, додаток запитує лише мінімальні нечутливі дозволи:</p>
+    <ul>
+      <li><code>https://www.googleapis.com/auth/drive.appdata</code> — для збереження прихованого синхронізаційного файлу <code>work_time_sync.json</code> у службовій теці додатку.</li>
+      <li><code>https://www.googleapis.com/auth/drive.file</code> — для створення та оновлення файлу резервної копії <code>work_time_backup.json</code> у вибраній вами папці на вашому власному Google Диску. Додаток не має доступу до інших ваших файлів на Диску.</li>
+    </ul>
+    <p>
+      Використання та передача інформації, отриманої через Google API, відповідає політиці
+      <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>,
+      включно з вимогами Limited Use.
+    </p>
+
+    <h2>4. Видалення даних та відкликання доступу</h2>
+    <ul>
+      <li>Ви можете в будь-який момент вийти з Google-акаунту у вкладці <strong>Хмара</strong>, очистити всі локальні записи або видалити резервну копію безпосередньо зі свого Google Диску.</li>
+      <li>Відкликати доступ також можна у налаштуваннях безпеки вашого Google-акаунту (<a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a>).</li>
+    </ul>
+
+    <h2>5. Контакти</h2>
+    <p>З питань конфіденційності звертайтесь: <a href="mailto:dikiyr@gmail.com">dikiyr@gmail.com</a></p>
+
+    <hr />
+
+    <h1>Privacy Policy — “Робочий час” (Robochyi Chas)</h1>
+    <p><strong>Last updated:</strong> November 23, 2026</p>
+
+    <h2>1. Overview</h2>
+    <p>
+      <strong>Робочий час</strong> (<code>ua.robochyichas.app</code>) is an offline-first personal work-time and overtime
+      tracker for Android. The app operates without a developer backend server, contains no ads, and does not share,
+      sell, or monetize user data.
+    </p>
+
+    <h2>2. Data Stored</h2>
+    <ul>
+      <li><strong>Work Log Data:</strong> shift dates, start/end times, breaks, notes, and overtime rules are stored <strong>locally on your device</strong> in SQLite.</li>
+      <li><strong>Google Account Info (Optional):</strong> if you choose to connect Google Drive backup, your email address and display name are read only to display the signed-in account inside the app.</li>
+    </ul>
+
+    <h2>3. Google Drive API Access</h2>
+    <p>When you opt in to Google Drive sync, the app requests only non-sensitive scopes:</p>
+    <ul>
+      <li><code>https://www.googleapis.com/auth/drive.appdata</code> — to store app-specific sync data (<code>work_time_sync.json</code>).</li>
+      <li><code>https://www.googleapis.com/auth/drive.file</code> — to create and update your backup file (<code>work_time_backup.json</code>) in a folder created/selected by the app. The app cannot read or modify unrelated files in your Google Drive.</li>
+    </ul>
+    <p>
+      Use of information received from Google APIs adheres to the
+      <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>,
+      including the Limited Use requirements.
+    </p>
+
+    <h2>4. Data Deletion & Revocation</h2>
+    <p>
+      You can sign out, delete local data inside the app, remove backup files from your Google Drive, or revoke access at
+      <a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a> at any time.
+    </p>
+
+    <h2>5. Contact</h2>
+    <p>Questions or deletion inquiries: <a href="mailto:dikiyr@gmail.com">dikiyr@gmail.com</a></p>
+  </div>
+</body>
+</html>

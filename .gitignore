@@ -1,0 +1,31 @@
+# Keystore & Secrets (NEVER commit signing keys or local passwords)
+keystore/
+*.jks
+*.keystore
+keystore.properties
+
+# Local Android SDK path
+local.properties
+
+# Gradle & Build outputs
+.gradle/
+**/build/
+build/
+.kotlin/
+
+# IDE files
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+
+# Compiled APK / AAB artifacts
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# OS junk
+.DS_Store
+Thumbs.db

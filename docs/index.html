@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Робочий час — Облік змін, пауз та наднормових годин</title>
+  <style>
+    :root {
+      --bg: #090d16;
+      --card: #111827;
+      --elevated: #1b2436;
+      --border: #28344a;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --sky: #38bdf8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: radial-gradient(circle at top right, #16243d 0%, var(--bg) 55%);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    .container { max-width: 920px; margin: 0 auto; padding: 36px 20px 64px; }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .logo {
+      width: 46px; height: 46px; border-radius: 14px;
+      background: linear-gradient(135deg, var(--emerald), var(--amber));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; color: #022c22; font-weight: 900;
+    }
+    .brand h1 { font-size: 1.35rem; font-weight: 800; }
+    .brand span { font-size: 0.85rem; color: var(--muted); display: block; }
+    nav { display: flex; gap: 18px; }
+    nav a {
+      color: var(--muted); text-decoration: none; font-weight: 600; font-size: 0.95rem;
+    }
+    nav a:hover { color: var(--emerald); }
+    .hero {
+      background: linear-gradient(135deg, #0f172a, #16243d);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 36px 28px;
+      margin-bottom: 28px;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(16, 185, 129, 0.14);
+      color: #6ee7b7;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+    .hero h2 { font-size: 2rem; line-height: 1.25; margin-bottom: 14px; }
+    .hero p { color: var(--muted); max-width: 680px; margin-bottom: 24px; }
+    .cta-row { display: flex; flex-wrap: wrap; gap: 12px; }
+    .btn {
+      display: inline-block;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-weight: 700;
+      text-decoration: none;
+      font-size: 0.95rem;
+    }
+    .btn-primary { background: var(--emerald); color: #022c22; }
+    .btn-secondary {
+      background: var(--elevated); color: var(--text); border: 1px solid var(--border);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px;
+    }
+    .card h3 { font-size: 1.05rem; margin-bottom: 8px; color: #fde68a; }
+    .card p { font-size: 0.92rem; color: var(--muted); }
+    footer {
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    footer a { color: var(--sky); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="logo">⏱</div>
+        <div>
+          <h1>Робочий час</h1>
+          <span>Android Work Time & Overtime Tracker</span>
+        </div>
+      </div>
+      <nav>
+        <a href="privacy.html">Політика конфіденційності / Privacy Policy</a>
+        <a href="https://github.com/Wildr23/robochyi-chas">GitHub</a>
+      </nav>
+    </header>
+
+    <section class="hero">
+      <div class="badge">v3.2 • Native Kotlin & Jetpack Compose • Offline-First</div>
+      <h2>Точний облік змін, перерв і банку наднормових годин</h2>
+      <p>
+        Додаток працює повністю офлайн на вашому пристрої та за бажанням автоматично створює
+        резервні копії на вашому Google Диску щойно з'являється інтернет. Без реклами, трекерів і сторонніх серверів.
+      </p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="https://github.com/Wildr23/robochyi-chas">Вихідний код на GitHub</a>
+        <a class="btn btn-secondary" href="privacy.html">Політика конфіденційності</a>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h3>⚡ Жива фіксація змін</h3>
+        <p>Старт зміни, пауза, продовження та завершення в один дотик із точним лічильником та підтримкою нічних змін через північ.</p>
+      </div>
+      <div class="card">
+        <h3>📊 Ліміт перенесення 35:00</h3>
+        <p>Автоматичний підрахунок щоденного перепрацювання, помісячний баланс і перенесення залишку між місяцями за заданим правилом.</p>
+      </div>
+      <div class="card">
+        <h3>☁️ Резервне копіювання в Google Диск</h3>
+        <p>Локальна база Room SQLite синхронізується безпосередньо з вашим власним Google Диском через офіційний API або вибір папки.</p>
+      </div>
+      <div class="card">
+        <h3>📥 Експорт CSV та JSON</h3>
+        <p>Зручна таблиця змін, графік по місяцях, експорт таблиці для Excel (CSV) та повний резервний JSON із перевіркою SHA-256.</p>
+      </div>
+    </section>
+
+    <footer>
+      <div>© 2026 Робочий час • Контакт: <a href="mailto:dikiyr@gmail.com">dikiyr@gmail.com</a></div>
+      <div><a href="privacy.html">Privacy Policy (UA / EN)</a></div>
+    </footer>
+  </div>
+</body>
+</html>

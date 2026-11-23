@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Outer emerald ring -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M54,24 A30,30 0 1,1 53.99,24 Z"
+        android:strokeWidth="6"
+        android:strokeColor="#10B981"
+        android:strokeLineCap="round" />
+    <!-- Top stopwatch crown -->
+    <path
+        android:fillColor="#10B981"
+        android:pathData="M48,15 L60,15 C61.1,15 62,15.9 62,17 L62,19 L46,19 L46,17 C46,15.9 46.9,15 48,15 Z" />
+    <!-- Amber overtime arc -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M54,24 A30,30 0 0,1 84,54"
+        android:strokeWidth="6"
+        android:strokeColor="#F59E0B"
+        android:strokeLineCap="round" />
+    <!-- Clock hands -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M54,36 L54,54 L67,62"
+        android:strokeWidth="5.5"
+        android:strokeColor="#F8FAFC"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- Center hub -->
+    <path
+        android:fillColor="#F59E0B"
+        android:pathData="M54,50 A4,4 0 1,1 53.99,50 Z" />
+</vector>
