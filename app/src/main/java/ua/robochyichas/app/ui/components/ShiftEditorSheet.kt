@@ -28,6 +28,7 @@ import androidx.compose.material.icons.rounded.CalendarToday
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Schedule
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -39,6 +40,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -108,6 +110,60 @@ fun ShiftEditorSheet(
         mutableStateOf(if (initialRecord.entryType == EntryType.OVERTIME) (absM % 60).toString() else "0")
     }
     var note by remember(initialRecord) { mutableStateOf(initialRecord.note) }
+    var showDeleteShiftConfirm by remember { mutableStateOf(false) }
+    var pauseIndexToDelete by remember { mutableStateOf<Int?>(null) }
+
+    if (showDeleteShiftConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteShiftConfirm = false },
+            title = { Text("Видалити запис?") },
+            text = { Text("Запис за ${TimeCalcEngine.formatDateUa(date)} буде видалено.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDeleteShiftConfirm = false
+                        onDelete(initialRecord.id)
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = colors.coral)
+                ) {
+                    Text("Видалити", color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteShiftConfirm = false }) {
+                    Text("Скасувати")
+                }
+            }
+        )
+    }
+
+    val pendingPauseIdx = pauseIndexToDelete
+    if (pendingPauseIdx != null && pendingPauseIdx in pauses.indices) {
+        val p = pauses[pendingPauseIdx]
+        AlertDialog(
+            onDismissRequest = { pauseIndexToDelete = null },
+            title = { Text("Видалити паузу?") },
+            text = {
+                Text("Пауза ${pendingPauseIdx + 1} (${p.start.ifBlank { "--:--" }}–${p.end.ifBlank { "..." }}) буде видалена.")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        pauses.removeAt(pendingPauseIdx)
+                        pauseIndexToDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = colors.coral)
+                ) {
+                    Text("Видалити", color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { pauseIndexToDelete = null }) {
+                    Text("Скасувати")
+                }
+            }
+        )
+    }
 
     fun pickDate() {
         val parsed = TimeCalcEngine.parseLocalDate(date) ?: LocalDate.now()
@@ -354,7 +410,7 @@ fun ShiftEditorSheet(
                             }
 
                             IconButton(
-                                onClick = { pauses.removeAt(idx) },
+                                onClick = { pauseIndexToDelete = idx },
                                 modifier = Modifier.size(32.dp)
                             ) {
                                 Icon(Icons.Rounded.Close, contentDescription = "Видалити паузу", tint = colors.coral, modifier = Modifier.size(16.dp))
@@ -466,7 +522,7 @@ fun ShiftEditorSheet(
             ) {
                 if (isEditingExisting) {
                     OutlinedButton(
-                        onClick = { onDelete(initialRecord.id) },
+                        onClick = { showDeleteShiftConfirm = true },
                         shape = RoundedCornerShape(14.dp),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.coral),
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp)

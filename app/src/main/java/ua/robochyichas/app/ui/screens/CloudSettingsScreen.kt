@@ -111,6 +111,8 @@ fun CloudSettingsScreen(
 
     var showRestoreDriveConfirm by remember { mutableStateOf(false) }
     var showClearConfirm by remember { mutableStateOf(false) }
+    var showUnlinkSafConfirm by remember { mutableStateOf(false) }
+    var showSignOutConfirm by remember { mutableStateOf(false) }
 
     var firstMonthInput by remember(settings.firstWorkMonth) { mutableStateOf(settings.firstWorkMonth) }
     var carryCapInput by remember(settings.carryOverCapMinutes) {
@@ -176,6 +178,58 @@ fun CloudSettingsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showClearConfirm = false }) {
+                    Text("Скасувати")
+                }
+            }
+        )
+    }
+
+    if (showUnlinkSafConfirm) {
+        AlertDialog(
+            onDismissRequest = { showUnlinkSafConfirm = false },
+            title = { Text("Відв'язати файл?") },
+            text = {
+                Text("Автоматичне збереження у «${sync.safBackupDisplayName.orEmpty()}» буде вимкнено. Сам файл на Диску залишиться.")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showUnlinkSafConfirm = false
+                        onUnlinkSaf()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = colors.coral)
+                ) {
+                    Text("Відв'язати", color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showUnlinkSafConfirm = false }) {
+                    Text("Скасувати")
+                }
+            }
+        )
+    }
+
+    if (showSignOutConfirm) {
+        AlertDialog(
+            onDismissRequest = { showSignOutConfirm = false },
+            title = { Text("Вийти з Google Диску?") },
+            text = {
+                Text("Автосинхронізація з «${sync.googleEmail.orEmpty()}» зупиниться. Локальні дані на пристрої залишаться.")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showSignOutConfirm = false
+                        onGoogleSignOut()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = colors.coral)
+                ) {
+                    Text("Вийти", color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSignOutConfirm = false }) {
                     Text("Скасувати")
                 }
             }
@@ -270,7 +324,7 @@ fun CloudSettingsScreen(
                                 )
                             }
                         }
-                        IconButton(onClick = onGoogleSignOut) {
+                        IconButton(onClick = { showSignOutConfirm = true }) {
                             Icon(Icons.AutoMirrored.Rounded.Logout, contentDescription = "Вийти", tint = colors.coral)
                         }
                     }
@@ -538,7 +592,7 @@ fun CloudSettingsScreen(
                                 color = colors.emeraldOnContainer
                             )
                         }
-                        TextButton(onClick = onUnlinkSaf) {
+                        TextButton(onClick = { showUnlinkSafConfirm = true }) {
                             Text("Відв'язати", color = colors.coral, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                         }
                     }
